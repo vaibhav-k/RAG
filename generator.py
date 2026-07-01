@@ -20,13 +20,10 @@ from config import (
 class Generator:
 
     def __init__(self):
-
         self.tokenizer = AutoTokenizer.from_pretrained(GENERATOR_MODEL_NAME)
-
         self.model = AutoModelForSeq2SeqLM.from_pretrained(GENERATOR_MODEL_NAME)
 
     def generate(self, prompt: str) -> str:
-
         inputs = self.tokenizer(
             prompt,
             return_tensors="pt",
@@ -37,7 +34,7 @@ class Generator:
         outputs = self.model.generate(
             **inputs,
             max_new_tokens=MAX_NEW_TOKENS,
-            do_sample=False,
+            # do_sample=False,
         )
 
         return self.tokenizer.decode(

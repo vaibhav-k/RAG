@@ -1,46 +1,77 @@
 """
 Retrieval-Augmented Generation (RAG) pipeline.
 
-This module coordinates the complete RAG workflow by combining
-document retrieval and language generation. It retrieves the most
-relevant documents for a user query, constructs a prompt using the
-retrieved context, and generates an answer using the language model.
-
-The RAGPipeline class provides a single interface for answering
-questions.
+Coordinates document retrieval and language generation.
 """
 
-from config import PROMPT_TEMPLATE
+from typing import List, Tuple, Optional
+
+from config import (
+    PROMPT_TEMPLATE,
+    MAX_CONTEXT_CHARS,
+    MAX_RETRIEVED_DOCS,
+)
+
 from retriever import Retriever
 from generator import Generator
 from embeddings import EmbeddingIndex
 
 
 class RAGPipeline:
+    """End-to-end Retrieval-Augmented Generation pipeline."""
 
     def __init__(self):
-
         self.embedding_index = EmbeddingIndex()
-
         self.retriever = Retriever(self.embedding_index)
-
         self.generator = Generator()
 
-    def answer(self, question):
+    def answer(self, question: str):
 
-        retrieved_docs, score = self.retriever.retrieve(question)
+        try:
+            retrieved_docs, _ = self.retriever.retrieve(question)
+        except Exception as e:
+            return None, f"Document retrieval failed: {e}"
 
-        if retrieved_docs is None:
+        if not retrieved_docs:
+            return None, "Sorry, I couldn't find any relevant documents."
 
-            return (None, "Sorry, I couldn't find a relevant document.")
+        retrieved_docs = retrieved_docs[:MAX_RETRIEVED_DOCS]
 
-        context = "\n\n".join(doc["document"]["text"] for doc in retrieved_docs)
+        # ✅ Build context correctly (ONLY ONCE)
+        context_parts = []
+        current_length = 0
+
+        for doc in retrieved_docs:
+            text = doc["document"]["text"].strip()
+
+            if current_length + len(text) > MAX_CONTEXT_CHARS:
+                remaining = MAX_CONTEXT_CHARS - current_length
+                if remaining > 0:
+                    context_parts.append(text[:remaining])
+                break
+
+            context_parts.append(f"""Title: {doc["document"]["title"]}
+Category: {doc["document"]["category"]}
+Source: {doc["document"]["source"]}
+
+{text}""")
+
+            current_length += len(text)
+
+        context = "\n\n".join(context_parts)
 
         prompt = PROMPT_TEMPLATE.format(
             context=context,
             question=question,
         )
 
-        answer = self.generator.generate(prompt)
+        print("\n===== PROMPT =====\n")
+        print(prompt)
+        print("\n==================\n")
+
+        try:
+            answer = self.generator.generate(prompt)
+        except Exception as e:
+            return retrieved_docs, f"Answer generation failed: {e}"
 
         return retrieved_docs, answer

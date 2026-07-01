@@ -1,63 +1,131 @@
 """
 Knowledge base for the RAG application.
 
-This module contains the collection of documents that can be retrieved
-to answer user questions. Each document includes metadata such as an
-identifier, title, and text content.
-
-In a production system, this data would typically come from a database,
-vector store, or external document repository.
+Each document represents a self-contained knowledge article.
+The metadata can later be used for filtering, citations,
+or displaying document sources.
 """
 
 documents = [
     {
         "id": 1,
-        "title": "Track Order",
-        "text": "To track your Amazon order, log into your account, go to 'Your Orders,' and click 'Track Package' for real-time updates.",
+        "title": "Track an Order",
+        "category": "Orders",
+        "source": "Amazon Help Center",
+        "text": (
+            "To track an Amazon order, sign in to your Amazon account and "
+            "go to Your Orders. Locate the order you want to track and "
+            "select Track Package. You'll see the latest shipping status, "
+            "estimated delivery date, carrier information, and delivery "
+            "updates if available."
+        ),
     },
     {
         "id": 2,
         "title": "Return Policy",
-        "text": "Amazon's return policy allows most items to be returned within 30 days of delivery for a full refund, provided they are in new condition with original packaging and accessories.",
+        "category": "Returns",
+        "source": "Amazon Help Center",
+        "text": (
+            "Most Amazon items can be returned within 30 days of delivery. "
+            "Items should generally be unused and returned with their "
+            "original packaging and accessories. Refund eligibility and "
+            "return windows may vary depending on the product category or seller."
+        ),
     },
     {
         "id": 3,
         "title": "Return an Order",
-        "text": "To return an Amazon order, initiate a return through 'Your Orders,' ship the item back, and receive a refund once processed.",
+        "category": "Returns",
+        "source": "Amazon Help Center",
+        "text": (
+            "To return an item, go to Your Orders, select the order, "
+            "choose Return or Replace Items, select a reason for the return, "
+            "choose a return method, and follow the instructions. "
+            "Refunds are typically processed after the returned item is received."
+        ),
     },
     {
         "id": 4,
-        "title": "Customer Support",
-        "text": "To contact Amazon customer service, use the Help section on the website or app to chat, call, or email support.",
+        "title": "Contact Customer Service",
+        "category": "Support",
+        "source": "Amazon Help Center",
+        "text": (
+            "If you need help with an Amazon order or account, visit the "
+            "Help section on the Amazon website or mobile app. Customer "
+            "service is available through live chat, phone, or email "
+            "depending on your region."
+        ),
     },
     {
         "id": 5,
-        "title": "Prime Benefits",
-        "text": "Amazon Prime members receive free two-day shipping, exclusive deals, and access to Prime Video and Prime Music.",
+        "title": "Amazon Prime Benefits",
+        "category": "Amazon Prime",
+        "source": "Amazon Help Center",
+        "text": (
+            "Amazon Prime membership includes fast delivery on eligible items, "
+            "Prime Video streaming, Prime Music, Prime Reading, "
+            "Prime Gaming, exclusive member-only deals, Prime Day offers, "
+            "and Amazon Fresh delivery in eligible locations. "
+            "Available benefits may vary by country."
+        ),
     },
     {
         "id": 6,
-        "title": "Delayed Package",
-        "text": "If your Amazon package is delayed, check the estimated delivery date in Your Orders or contact customer service.",
+        "title": "Delayed Delivery",
+        "category": "Shipping",
+        "source": "Amazon Help Center",
+        "text": (
+            "If your package is delayed, check the latest delivery estimate "
+            "from Your Orders. Shipping delays may occur due to weather, "
+            "carrier issues, or inventory availability. If the package "
+            "does not arrive after the expected delivery date, contact "
+            "Amazon Customer Service."
+        ),
     },
     {
         "id": 7,
-        "title": "Cancel Order",
-        "text": "To cancel an Amazon order, go to Your Orders, select the order, and click Cancel Items if it hasn't shipped yet.",
+        "title": "Cancel an Order",
+        "category": "Orders",
+        "source": "Amazon Help Center",
+        "text": (
+            "To cancel an order, go to Your Orders, select the order, and "
+            "choose Cancel Items. Orders that have already shipped may "
+            "not be cancelled and may instead need to be returned after delivery."
+        ),
     },
     {
         "id": 8,
-        "title": "Gift Cards",
-        "text": "To purchase an Amazon gift card, visit the Gift Cards section, choose a design and amount, add it to your cart, and complete checkout.",
+        "title": "Amazon Gift Cards",
+        "category": "Gift Cards",
+        "source": "Amazon Help Center",
+        "text": (
+            "Amazon Gift Cards can be purchased from the Gift Cards section. "
+            "Choose a design, delivery method, and amount before adding the "
+            "gift card to your cart and completing checkout."
+        ),
     },
     {
         "id": 9,
-        "title": "Payment Method",
-        "text": "To update your Amazon payment method, go to Your Account, select Your Payments, and add or edit your payment details.",
+        "title": "Manage Payment Methods",
+        "category": "Payments",
+        "source": "Amazon Help Center",
+        "text": (
+            "To add, remove, or update a payment method, sign in to your "
+            "Amazon account, open Your Account, and select Your Payments. "
+            "You can manage credit cards, debit cards, and other supported "
+            "payment methods."
+        ),
     },
     {
         "id": 10,
-        "title": "Login",
-        "text": "To sign in to Amazon, click Sign In and enter your registered email or phone number and password.",
+        "title": "Sign In to Your Amazon Account",
+        "category": "Account",
+        "source": "Amazon Help Center",
+        "text": (
+            "To sign in to Amazon, select Sign In and enter your registered "
+            "email address or mobile phone number along with your password. "
+            "If you cannot remember your password, select Forgot Password "
+            "to reset it."
+        ),
     },
 ]

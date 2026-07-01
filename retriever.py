@@ -20,7 +20,6 @@ class Retriever:
         self.embedding_index = embedding_index
 
     def retrieve(self, query):
-
         query_embedding = self.embedding_index.embed_query(query)
 
         scores, indices = self.embedding_index.index.search(query_embedding, TOP_K)
@@ -31,11 +30,12 @@ class Retriever:
         retrieved_docs = []
 
         for score, idx in zip(scores[0], indices[0]):
-
+            if idx == -1:
+                continue
             retrieved_docs.append(
                 {
                     "score": float(score),
-                    "document": documents[idx],
+                    "document": self.embedding_index.documents[idx],
                 }
             )
 
