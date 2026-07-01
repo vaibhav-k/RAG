@@ -11,7 +11,6 @@ text generation.
 """
 
 from config import TOP_K, SIMILARITY_THRESHOLD
-from data import documents
 
 
 class Retriever:
@@ -30,8 +29,15 @@ class Retriever:
         retrieved_docs = []
 
         for score, idx in zip(scores[0], indices[0]):
+            score = float(score)
+
             if idx == -1:
                 continue
+
+            # Filter weak matches
+            if score < 0.0000000000001:
+                continue
+
             retrieved_docs.append(
                 {
                     "score": float(score),

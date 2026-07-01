@@ -26,6 +26,8 @@ class RAGPipeline:
     def __init__(self) -> None:
         """Initialize embedding index, retriever, and generator."""
         self.embedding_index: EmbeddingIndex = EmbeddingIndex()
+        self.embedding_index.initialize()
+
         self.retriever: Retriever = Retriever(self.embedding_index)
         self.generator: Generator = Generator()
 
@@ -68,9 +70,7 @@ class RAGPipeline:
                     context_parts.append(text[:remaining])
                 break
 
-            context_parts.append(f"""Title: {document["title"]}
-
-{text}""")
+            context_parts.append(f"[Source: {document['title']}]\n{text}")
 
             current_length += len(text)
 

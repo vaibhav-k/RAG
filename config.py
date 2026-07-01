@@ -1,36 +1,86 @@
 """
 Application configuration.
 
-This module contains all configurable constants used throughout the RAG
-application, including model names, retrieval settings, generation
-parameters, embedding cache location, and the prompt template.
-
-Keeping configuration in one place makes the application easier to
-maintain and experiment with.
+This module centralizes all configurable constants used throughout the
+RAG application, including models, retrieval settings, generation
+parameters, embedding cache, FAISS index persistence, and text
+chunking configuration.
 """
 
-# Embedding model
-EMBEDDING_MODEL_NAME = "sentence-transformers/all-MiniLM-L6-v2"
+from pathlib import Path
 
-# Generator model
+# =============================================================================
+# Paths
+# =============================================================================
+
+BASE_DIR = Path(__file__).resolve().parent
+
+DOCS_PATH = BASE_DIR / "docs"
+
+CACHE_DIR = BASE_DIR / "cache"
+CACHE_DIR.mkdir(exist_ok=True)
+
+EMBEDDINGS_FILE = CACHE_DIR / "doc_embeddings.npy"
+FAISS_INDEX_FILE = CACHE_DIR / "faiss.index"
+CACHE_METADATA_FILE = CACHE_DIR / "cache_metadata.json"
+
+# =============================================================================
+# Models
+# =============================================================================
+
+EMBEDDING_MODEL_NAME = "sentence-transformers/all-MiniLM-L6-v2"
 GENERATOR_MODEL_NAME = "google/flan-t5-small"
 
-# Retrieval settings
-TOP_K = 1
-SIMILARITY_THRESHOLD = 0.25
+# =============================================================================
+# Embedding Configuration
+# =============================================================================
 
-# Generation settings
+EMBEDDING_BATCH_SIZE = 64
+
+# Automatically use GPU if available
+DEVICE = "cuda"
+
+# =============================================================================
+# Chunking
+# =============================================================================
+
+CHUNK_SIZE = 500
+CHUNK_OVERLAP = 100
+
+# =============================================================================
+# Retrieval
+# =============================================================================
+
+TOP_K = 5
+
+SIMILARITY_THRESHOLD = 0.0
+
+MAX_RETRIEVED_DOCS = 5
+
+MAX_CONTEXT_CHARS = 6000
+
+# =============================================================================
+# Generation
+# =============================================================================
+
+TOKENIZER_MAX_LENGTH = 512
+
 MAX_NEW_TOKENS = 50
+
 DO_SAMPLE = False
 
-# Embedding cache
-EMBEDDINGS_FILE = "doc_embeddings.npy"
+# =============================================================================
+# Prompt
+# =============================================================================
 
-# Prompt template
 PROMPT_TEMPLATE = """
 You are an Amazon customer support assistant.
 
-Answer the question using ONLY the context below.
+Use the context to give a clear, complete answer.
+
+If the context is partial, combine all relevant details.
+
+Do not be overly short.
 
 Context:
 {context}
@@ -40,12 +90,3 @@ Question:
 
 Answer:
 """
-
-# Maximum number of retrieved documents
-MAX_RETRIEVED_DOCS = 5
-
-# Maximum context length (characters)
-MAX_CONTEXT_CHARS = 6000
-
-# Source for the documentation txt files
-DOCS_PATH = "docs"

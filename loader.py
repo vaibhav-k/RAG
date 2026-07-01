@@ -1,55 +1,142 @@
 """
 Document loader module for the RAG system.
 
-This module loads raw text documents from the local `docs/` directory
-and converts them into a structured format that can be used by the
-embedding and retrieval pipeline.
-
-Each file is treated as a separate document.
+Supports multiple document formats through a reader registry.
 """
 
-import os
-from typing import List, Dict
+from __future__ import annotations
+
+import logging
+from pathlib import Path
+from typing import Any, Callable
+
+from bs4 import BeautifulSoup
+from docx import Document
+from pypdf import PdfReader
+
 
 from config import DOCS_PATH
 
+logger = logging.getLogger(__name__)
 
-def load_documents() -> List[Dict]:
+# Type alias for document readers
+Reader = Callable[[Path], str]
+
+
+def read_txt(file_path: Path) -> str:
+    """Read a UTF-8 text file."""
+    return file_path.read_text(encoding="utf-8").strip()
+
+
+def read_docx(file_path: Path) -> str:
+    """Read text from a Word document."""
+
+    document = Document(file_path)
+
+    paragraphs = [
+        paragraph.text.strip()
+        for paragraph in document.paragraphs
+        if paragraph.text.strip()
+    ]
+
+    return "\n".join(paragraphs)
+
+
+def read_markdown(file_path: Path) -> str:
+    """Read text from a Markdown document."""
+    return file_path.read_text(encoding="utf-8").strip()
+
+
+def read_pdf(file_path: Path) -> str:
+    """Read text from a PDF document."""
+    reader = PdfReader(file_path)
+    return "\n".join(page.extract_text() or "" for page in reader.pages)
+
+
+def read_html(file_path: Path) -> str:
+    """Read text from an HTML document."""
+    soup = BeautifulSoup(
+        file_path.read_text(encoding="utf-8"),
+        "html.parser",
+    )
+    return soup.get_text(separator="\n")
+
+
+# ------------------------------------------------------------------
+# Register supported document readers here
+# ------------------------------------------------------------------
+
+READERS: dict[str, Reader] = {
+    ".txt": read_txt,
+    ".docx": read_docx,
+    ".md": read_markdown,
+    ".pdf": read_pdf,
+    ".html": read_html,
+}
+
+
+def load_documents() -> list[dict[str, Any]]:
     """
-    Load all text documents from the docs directory.
-
-    Each document is converted into a dictionary with:
-        - id: filename
-        - title: derived from filename
-        - text: full file content
-
-    Raises:
-        FileNotFoundError: If the docs directory is absent.
-
-    Returns:
-        List of document dictionaries.
+    Load all supported documents from the docs directory.
     """
-    documents = []
 
-    if not os.path.exists(DOCS_PATH):
-        raise FileNotFoundError(f"Docs directory not found: {DOCS_PATH}")
+    if not DOCS_PATH.exists():
+        raise FileNotFoundError(f"Document directory not found: {DOCS_PATH}")
 
-    for file_name in os.listdir(DOCS_PATH):
-        if not file_name.endswith(".txt"):
+    documents: list[dict[str, Any]] = []
+
+    # Collect every supported file
+    files: list[Path] = sorted(
+        file
+        for file in DOCS_PATH.iterdir()
+        if file.is_file() and file.suffix.lower() in READERS
+    )
+
+    if not files:
+        logger.warning("No supported documents found.")
+
+    logger.info("Found %d document(s).", len(files))
+
+    for file_path in files:
+
+        reader = READERS.get(file_path.suffix.lower())
+
+        if reader is None:
+            logger.debug(
+                "Skipping unsupported file: %s",
+                file_path.name,
+            )
             continue
 
-        file_path = os.path.join(DOCS_PATH, file_name)
+        try:
+            text = reader(file_path)
 
-        with open(file_path, "r", encoding="utf-8") as f:
-            text = f.read().strip()
+        except Exception as exc:
+            logger.exception(
+                "Failed reading %s",
+                file_path.name,
+            )
+            raise RuntimeError(f"Unable to read {file_path.name}") from exc
+
+        if not text.strip():
+            logger.warning(
+                "Skipping empty document: %s",
+                file_path.name,
+            )
+            continue
 
         documents.append(
             {
-                "id": file_name,
-                "title": file_name.replace(".txt", "").title(),
+                "id": file_path.name,
+                "title": file_path.stem.replace("_", " ").title(),
                 "text": text,
-                "metadata": {"source": file_name},
+                "metadata": {
+                    "source": file_path.name,
+                    "file_type": file_path.suffix.lower(),
+                },
             }
         )
+
+    logger.info("Loaded %d document(s).", len(documents))
 
     return documents

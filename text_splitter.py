@@ -1,32 +1,80 @@
 """
-Text splitting utilities for RAG.
+Text splitting utilities for the RAG system.
 
-This module handles splitting long documents into smaller overlapping
-chunks so that embeddings and retrieval work more effectively.
+This module splits long documents into overlapping chunks suitable for
+embedding and semantic retrieval.
 """
 
-from typing import List
+from __future__ import annotations
+
+import logging
+
+from config import CHUNK_SIZE, CHUNK_OVERLAP
+
+logger = logging.getLogger(__name__)
 
 
-def chunk_text(text: str, chunk_size: int = 500, overlap: int = 100) -> List[str]:
+def chunk_text(
+    text: str,
+    chunk_size: int = CHUNK_SIZE,
+    overlap: int = CHUNK_OVERLAP,
+) -> list[str]:
     """
-    Split a text into overlapping chunks.
+    Split text into overlapping chunks.
 
     Args:
-        text: Input document text
-        chunk_size: Maximum characters per chunk
-        overlap: Number of overlapping characters between chunks
+        text:
+            Input text.
+
+        chunk_size:
+            Maximum number of characters per chunk.
+
+        overlap:
+            Number of overlapping characters.
 
     Returns:
-        List of text chunks
+        List of text chunks.
+
+    Raises:
+        ValueError:
+            If chunk_size or overlap are invalid.
     """
 
-    chunks = []
+    if chunk_size <= 0:
+        raise ValueError("chunk_size must be greater than 0.")
+
+    if overlap < 0:
+        raise ValueError("overlap cannot be negative.")
+
+    if overlap >= chunk_size:
+        raise ValueError("overlap must be smaller than chunk_size.")
+
+    text = text.strip()
+
+    if not text:
+        logger.warning("Received empty text for chunking.")
+        return []
+
+    chunks: list[str] = []
+
+    step = chunk_size - overlap
     start = 0
 
     while start < len(text):
-        end = start + chunk_size
-        chunks.append(text[start:end])
-        start += chunk_size - overlap
+
+        end = min(start + chunk_size, len(text))
+
+        chunk = text[start:end].strip()
+
+        if chunk:
+            chunks.append(chunk)
+
+        start += step
+
+    logger.debug(
+        "Split text (%d chars) into %d chunks.",
+        len(text),
+        len(chunks),
+    )
 
     return chunks
