@@ -34,16 +34,14 @@ def main():
 
             print("\nRetrieved Documents")
 
-            for i, doc in enumerate(docs, start=1):
-                print(
-                    f"{i}. "
-                    f"{doc['document']['title']} "
-                    f"(score = {doc['score']:.3f}) "
-                    f"({doc['document']['source']}) "
-                    f"({doc['document']['category']})"
-                )
+            for doc in docs:
+                title = doc["document"].get("title", "N/A")
+                source = doc["document"].get("metadata", {}).get("source", "unknown")
+                score = doc.get("score", 0)
 
-        print(f"\nAnswer:{answer}")
+                print(f"{title} (score = {score:.3f}) (source file = {source})")
+
+        print(f"\nAnswer:\n{answer}")
 
 
 if __name__ == "__main__":

@@ -46,3 +46,6 @@ MAX_RETRIEVED_DOCS = 5
 
 # Maximum context length (characters)
 MAX_CONTEXT_CHARS = 6000
+
+# Source for the documentation txt files
+DOCS_PATH = "docs"

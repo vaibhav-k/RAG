@@ -4,7 +4,7 @@ Retrieval-Augmented Generation (RAG) pipeline.
 Coordinates document retrieval and language generation.
 """
 
-from typing import List, Tuple, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 from config import (
     PROMPT_TEMPLATE,
@@ -16,16 +16,34 @@ from retriever import Retriever
 from generator import Generator
 from embeddings import EmbeddingIndex
 
+# Type alias for clarity
+RetrievedDoc = Dict[str, Any]
+
 
 class RAGPipeline:
     """End-to-end Retrieval-Augmented Generation pipeline."""
 
-    def __init__(self):
-        self.embedding_index = EmbeddingIndex()
-        self.retriever = Retriever(self.embedding_index)
-        self.generator = Generator()
+    def __init__(self) -> None:
+        """Initialize embedding index, retriever, and generator."""
+        self.embedding_index: EmbeddingIndex = EmbeddingIndex()
+        self.retriever: Retriever = Retriever(self.embedding_index)
+        self.generator: Generator = Generator()
 
-    def answer(self, question: str):
+    def answer(
+        self,
+        question: str,
+    ) -> Tuple[Optional[List[RetrievedDoc]], str]:
+        """
+        Generate an answer for a user question using RAG.
+
+        Args:
+            question: User query string.
+
+        Returns:
+            Tuple of:
+                - Retrieved documents (or None if failed)
+                - Generated answer string
+        """
 
         try:
             retrieved_docs, _ = self.retriever.retrieve(question)
@@ -37,40 +55,34 @@ class RAGPipeline:
 
         retrieved_docs = retrieved_docs[:MAX_RETRIEVED_DOCS]
 
-        # ✅ Build context correctly (ONLY ONCE)
-        context_parts = []
-        current_length = 0
+        context_parts: List[str] = []
+        current_length: int = 0
 
         for doc in retrieved_docs:
-            text = doc["document"]["text"].strip()
+            document = doc["document"]
+            text: str = document["text"].strip()
 
             if current_length + len(text) > MAX_CONTEXT_CHARS:
-                remaining = MAX_CONTEXT_CHARS - current_length
+                remaining: int = MAX_CONTEXT_CHARS - current_length
                 if remaining > 0:
                     context_parts.append(text[:remaining])
                 break
 
-            context_parts.append(f"""Title: {doc["document"]["title"]}
-Category: {doc["document"]["category"]}
-Source: {doc["document"]["source"]}
+            context_parts.append(f"""Title: {document["title"]}
 
 {text}""")
 
             current_length += len(text)
 
-        context = "\n\n".join(context_parts)
+        context: str = "\n\n".join(context_parts)
 
-        prompt = PROMPT_TEMPLATE.format(
+        prompt: str = PROMPT_TEMPLATE.format(
             context=context,
             question=question,
         )
 
-        print("\n===== PROMPT =====\n")
-        print(prompt)
-        print("\n==================\n")
-
         try:
-            answer = self.generator.generate(prompt)
+            answer: str = self.generator.generate(prompt)
         except Exception as e:
             return retrieved_docs, f"Answer generation failed: {e}"
 
