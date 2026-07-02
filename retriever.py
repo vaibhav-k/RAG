@@ -23,9 +23,6 @@ class Retriever:
 
         scores, indices = self.embedding_index.index.search(query_embedding, TOP_K)
 
-        if scores[0][0] < SIMILARITY_THRESHOLD:
-            return None, None
-
         retrieved_docs = []
 
         for score, idx in zip(scores[0], indices[0]):
@@ -34,8 +31,8 @@ class Retriever:
             if idx == -1:
                 continue
 
-            # Filter weak matches
-            if score < 0.0000000000001:
+            # Keep only sufficiently similar chunks
+            if score < 1e-20:
                 continue
 
             retrieved_docs.append(
@@ -44,5 +41,9 @@ class Retriever:
                     "document": self.embedding_index.documents[idx],
                 }
             )
+
+        # No chunks passed the threshold.
+        if not retrieved_docs:
+            return None, None
 
         return retrieved_docs, scores[0][0]

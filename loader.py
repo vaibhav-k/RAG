@@ -14,7 +14,6 @@ from bs4 import BeautifulSoup
 from docx import Document
 from pypdf import PdfReader
 
-
 from config import DOCS_PATH
 
 logger = logging.getLogger(__name__)
@@ -78,8 +77,11 @@ READERS: dict[str, Reader] = {
 def load_documents() -> list[dict[str, Any]]:
     """
     Load all supported documents from the docs directory.
-    """
 
+    Raises:
+        FileNotFoundError: If the document directory (DOCS_PATH) not found
+        RuntimeError: If it is unable to read a file
+    """
     if not DOCS_PATH.exists():
         raise FileNotFoundError(f"Document directory not found: {DOCS_PATH}")
 
@@ -98,31 +100,20 @@ def load_documents() -> list[dict[str, Any]]:
     logger.info("Found %d document(s).", len(files))
 
     for file_path in files:
-
         reader = READERS.get(file_path.suffix.lower())
 
         if reader is None:
-            logger.debug(
-                "Skipping unsupported file: %s",
-                file_path.name,
-            )
+            logger.debug(f"Skipping unsupported file: {file_path.name}")
             continue
 
         try:
             text = reader(file_path)
-
         except Exception as exc:
-            logger.exception(
-                "Failed reading %s",
-                file_path.name,
-            )
+            logger.exception(f"Failed reading {file_path.name}")
             raise RuntimeError(f"Unable to read {file_path.name}") from exc
 
         if not text.strip():
-            logger.warning(
-                "Skipping empty document: %s",
-                file_path.name,
-            )
+            logger.warning(f"Skipping empty document: {file_path.name}")
             continue
 
         documents.append(
@@ -137,6 +128,6 @@ def load_documents() -> list[dict[str, Any]]:
             }
         )
 
-    logger.info("Loaded %d document(s).", len(documents))
+    logger.info(f"Loaded {len(documents)} document(s).")
 
     return documents

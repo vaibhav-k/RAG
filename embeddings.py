@@ -31,7 +31,7 @@ from config import (
 )
 
 from loader import load_documents
-from text_splitter import chunk_text
+from text_splitter import chunk_text_fixed_chunk_size
 
 logger = logging.getLogger(__name__)
 
@@ -71,7 +71,7 @@ class EmbeddingIndex:
         self.documents: list[dict[str, Any]] = []
 
         for doc in raw_documents:
-            chunks = chunk_text(doc["text"])
+            chunks = chunk_text_fixed_chunk_size(doc["text"])
 
             for i, chunk in enumerate(chunks):
                 self.documents.append(
@@ -197,7 +197,7 @@ class EmbeddingIndex:
             batch_embeddings = self.model.encode(
                 batch,
                 convert_to_numpy=True,
-                show_progress_bar=True,
+                show_progress_bar=False,
             ).astype("float32")
 
             all_embeddings.append(batch_embeddings)
